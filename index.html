@@ -1,0 +1,279 @@
+<title>健康福袋試算工具</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* layout: single-column mobile-first form, sticky bottom settlement bar */
+:root{
+  --bg:#f4f6f5; --surface:#ffffff; --ink:#1b2a28; --ink-dim:#5b6f6b;
+  --line:#dbe4e1; --accent:#0f6e5c; --accent-ink:#ffffff;
+  --ok-bg:#e3f5ea; --ok-ink:#116136; --warn-bg:#fdecec; --warn-ink:#9a2020;
+  --input-bg:#fff9e0; --input-line:#e8d27a;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101715; --surface:#182220; --ink:#e7efec; --ink-dim:#93a39e;
+    --line:#2a3a36; --accent:#3ddba3; --accent-ink:#06211a;
+    --ok-bg:#103626; --ok-ink:#7fe0ae; --warn-bg:#3a1a1a; --warn-ink:#ff9b9b;
+    --input-bg:#2a2708; --input-line:#5a5120;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101715; --surface:#182220; --ink:#e7efec; --ink-dim:#93a39e;
+  --line:#2a3a36; --accent:#3ddba3; --accent-ink:#06211a;
+  --ok-bg:#103626; --ok-ink:#7fe0ae; --warn-bg:#3a1a1a; --warn-ink:#ff9b9b;
+  --input-bg:#2a2708; --input-line:#5a5120;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans TC","Inter",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-bottom:110px;
+}
+h1,h2{font-family:"Space Grotesk","Noto Sans TC",sans-serif; text-wrap:balance; margin:0}
+.wrap{max-width:640px; margin:0 auto; padding-block:20px 0}
+.eyebrow{font-size:12px; letter-spacing:.08em; color:var(--ink-dim); text-transform:uppercase; margin-bottom:4px}
+h1{font-size:22px; font-weight:700}
+.sub{color:var(--ink-dim); font-size:13px; margin-top:6px; line-height:1.6}
+.card{
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  padding:16px; margin-top:16px;
+}
+.card h2{font-size:15px; font-weight:700}
+.rules{font-size:12.5px; color:var(--ink-dim); line-height:1.8; white-space:pre-line}
+.row{
+  display:grid; grid-template-columns: 1fr auto auto; gap:4px 10px;
+  align-items:end; padding:10px 0; border-top:1px solid var(--line);
+}
+.row:first-of-type{border-top:none}
+.row .meta{min-width:0; align-self:center}
+.row .name{font-size:13.5px; font-weight:600}
+.row .code{font-size:11px; color:var(--ink-dim); font-variant-numeric:tabular-nums}
+.row .price{font-size:11.5px; color:var(--ink-dim); margin-top:2px}
+.field{display:flex; flex-direction:column; gap:3px; align-items:center}
+.field label{font-size:10px; color:var(--ink-dim); white-space:nowrap}
+.qty, .priceInput{
+  width:76px; text-align:center; font-size:15px; font-variant-numeric:tabular-nums;
+  background:var(--input-bg); border:1px solid var(--input-line); border-radius:8px;
+  padding:8px 4px; color:var(--ink);
+}
+.qty:focus, .priceInput:focus{outline:2px solid var(--accent); outline-offset:1px}
+.priceInput.below{border-color:var(--warn-ink); background:var(--warn-bg)}
+.subtotal{grid-column:1/-1; text-align:right; font-size:11.5px; color:var(--ink-dim); margin-top:-2px}
+.pricewarn{grid-column:1/-1; text-align:right; font-size:11px; font-weight:700; color:var(--warn-ink); margin-top:-2px}
+.checklist{display:flex; flex-direction:column; gap:8px}
+.check{
+  display:flex; justify-content:space-between; gap:12px; align-items:flex-start;
+  padding:10px 12px; border-radius:10px; font-size:12.5px; line-height:1.5;
+}
+.check .label{color:var(--ink-dim); min-width:0}
+.check .state{font-weight:700; white-space:nowrap}
+.check.ok{background:var(--ok-bg)}
+.check.ok .state{color:var(--ok-ink)}
+.check.warn{background:var(--warn-bg)}
+.check.warn .state{color:var(--warn-ink)}
+.bar{
+  position:fixed; left:0; right:0; bottom:0; z-index:5;
+  background:var(--surface); border-top:1px solid var(--line);
+  padding:10px max(16px, env(safe-area-inset-right,0px)) max(10px, env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px));
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.bar .l{font-size:11px; color:var(--ink-dim)}
+.bar .v{font-size:20px; font-weight:700; font-family:"Space Grotesk",sans-serif; color:var(--accent)}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">成熟藥品 EB．活動試算</div>
+  <h1>健康福袋販促活動</h1>
+  <p class="sub">輸入開單數量，門檻檢查與結帳金額會即時更新。</p>
+
+  <div class="card">
+    <h2>活動辦法摘要</h2>
+    <div class="rules">口數設定：① AMOXICILLIN 大品項50單位＋小品項10選3合計25單位＝總計75單位或其倍數　② ANBICYN 大品項100單位＋小品項10選3合計50單位＝總計150單位或其倍數
+開單條件：① 開單價格不得低於下表單價　② 開單時不設定付款優惠　③ 品項可併「簽約內容」優惠　④ 活動訂單與常規訂單分開開立
+活動優惠：① 結帳總金額再打9折，以折讓沖銷方式處理　② 可分批出貨(最多三批，最後出貨日2027/03/31)
+活動截止日：2027/03/31</div>
+  </div>
+
+  <div class="card">
+    <h2>大品項（2選1，請勿同時輸入兩款）</h2>
+    <div id="bigRows"></div>
+  </div>
+
+  <div class="card">
+    <h2>小品項（10選3，每項最少1單位）</h2>
+    <div id="smallRows"></div>
+  </div>
+
+  <div class="card">
+    <h2>門檻檢查</h2>
+    <div class="checklist" id="checks"></div>
+  </div>
+</div>
+
+<div class="bar">
+  <div>
+    <div class="l">結帳金額（優惠前 → 9折後）</div>
+    <div class="v" id="barTotal">$0</div>
+  </div>
+  <div style="text-align:right">
+    <div class="l">折讓沖銷</div>
+    <div class="v" id="barRebate" style="font-size:15px; color:var(--ink-dim)">$0</div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+// ---------- product data (from 業務試算用 V1.0) ----------
+const BIG = [
+  {code:"A024226", name:"AMOXICILLIN 500MG 1000C/BTL", price:1450, threshold:50, floor:25},
+  {code:"A020569", name:"ANBICYN F.C.T. 625MG120T/PTP", price:744, threshold:100, floor:50},
+];
+const SMALL = [
+  {code:"C020028", name:"AZICILIN TAB. 250MG 100T/BTL", price:430},
+  {code:"C062093", name:"DONISON 5MG 2000TAB", price:700},
+  {code:"C065364", name:"DONISON TAB. 1000T/PTP", price:700},
+  {code:"C291499", name:"FINSKA TAB.10MG 1000T/BTL", price:480},
+  {code:"C284477", name:"METHON C.T.30MG 1000TAB", price:480},
+  {code:"C139861", name:"MOZAPRY F.C.T 5MG 1000T/BTL", price:670},
+  {code:"C138956", name:"MOZAPRY F.C.TAB.5MG 840T/PTP", price:680},
+  {code:"C283036", name:"MUBROXOL TAB30MG 1000T/PTP", price:580},
+  {code:"C280208", name:"MUBROXOL TAB.30MG 1000T/BTL", price:430},
+  {code:"C298221", name:"XYZINE FCT5MG 1000T/PTP", price:850},
+];
+const N_PICK = 3;
+
+function fmt(n){ return "$" + Math.round(n).toLocaleString("en-US"); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+const state = { big: {}, small: {}, bigPrice: {}, smallPrice: {} };
+BIG.forEach(p => { state.big[p.code] = 0; state.bigPrice[p.code] = p.price; });
+SMALL.forEach(p => { state.small[p.code] = 0; state.smallPrice[p.code] = p.price; });
+
+// ---------- render product rows ----------
+const bigRowsEl = document.getElementById("bigRows");
+const smallRowsEl = document.getElementById("smallRows");
+
+function renderRow(p, container, qtyBucket, priceBucket){
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `
+    <div class="meta">
+      <div class="name">${esc(p.name)}</div>
+      <div class="code">${esc(p.code)}</div>
+      <div class="price">最低開單價格 ${fmt(p.price)}</div>
+    </div>
+    <div class="field">
+      <label for="price-${p.code}">本次開單價格</label>
+      <input class="priceInput" type="number" min="0" step="1" inputmode="numeric" value="${p.price}" id="price-${p.code}">
+    </div>
+    <div class="field">
+      <label for="qty-${p.code}">數量</label>
+      <input class="qty" type="number" min="0" step="1" inputmode="numeric" value="0" id="qty-${p.code}">
+    </div>
+    <div class="subtotal" id="sub-${p.code}">小計 $0</div>
+    <div class="pricewarn" id="warn-${p.code}" hidden>✗ 低於最低開單價格 ${fmt(p.price)}</div>
+  `;
+  container.appendChild(row);
+  const qtyInput = row.querySelector(".qty");
+  const priceInput = row.querySelector(".priceInput");
+  qtyInput.addEventListener("input", () => {
+    qtyBucket[p.code] = Math.max(0, Math.floor(Number(qtyInput.value) || 0));
+    recalc();
+  });
+  priceInput.addEventListener("input", () => {
+    const raw = priceInput.value;
+    priceBucket[p.code] = raw === "" ? p.price : Math.max(0, Number(raw) || 0);
+    recalc();
+  });
+  priceInput.addEventListener("blur", () => {
+    if (priceInput.value === "") { priceInput.value = p.price; priceBucket[p.code] = p.price; recalc(); }
+  });
+}
+BIG.forEach(p => renderRow(p, bigRowsEl, state.big, state.bigPrice));
+SMALL.forEach(p => renderRow(p, smallRowsEl, state.small, state.smallPrice));
+
+const checksEl = document.getElementById("checks");
+const barTotalEl = document.getElementById("barTotal");
+const barRebateEl = document.getElementById("barRebate");
+
+function updateRowMoney(p, qty, price){
+  document.getElementById(`sub-${p.code}`).textContent = "小計 " + fmt(price * qty);
+  const below = price < p.price;
+  const warnEl = document.getElementById(`warn-${p.code}`);
+  const priceEl = document.getElementById(`price-${p.code}`);
+  warnEl.hidden = !below;
+  priceEl.classList.toggle("below", below);
+}
+
+function recalc(){
+  const amoxQty = state.big["A024226"];
+  const anbQty  = state.big["A020569"];
+  BIG.forEach(p => updateRowMoney(p, state.big[p.code], state.bigPrice[p.code]));
+  SMALL.forEach(p => updateRowMoney(p, state.small[p.code], state.smallPrice[p.code]));
+
+  const smallSum = SMALL.reduce((s,p) => s + state.small[p.code], 0);
+  const smallCount = SMALL.reduce((s,p) => s + (state.small[p.code] > 0 ? 1 : 0), 0);
+  const dualActive = amoxQty > 0 && anbQty > 0;
+  const activeAnchor = amoxQty > 0 ? BIG[0] : (anbQty > 0 ? BIG[1] : null);
+  const activeQty = activeAnchor ? (activeAnchor.code === "A024226" ? amoxQty : anbQty) : 0;
+  const floor = activeAnchor ? activeAnchor.floor : 0;
+
+  const checks = [];
+  checks.push({
+    label: "是否同時對兩款大品項開單？",
+    ok: !dualActive,
+    text: dualActive ? "⚠ 請改為分開立單" : "✓ 正常"
+  });
+  checks.push({
+    label: `小品項合計數量：${smallSum}`,
+    ok: true, neutral: true,
+    text: `共 ${smallSum} 單位`
+  });
+  let chk1;
+  if (!activeAnchor) chk1 = {ok:null, text:"— 尚未選定大品項"};
+  else chk1 = activeQty >= activeAnchor.threshold
+    ? {ok:true, text:`✓ 已達${activeAnchor.threshold}單位門檻`}
+    : {ok:false, text:`✗ 未達${activeAnchor.threshold}單位門檻`};
+  checks.push({label:"檢查①：大品項是否達口數門檻？", ok:chk1.ok, text:chk1.text});
+
+  let chk2;
+  if (!activeAnchor) chk2 = {ok:null, text:"— 尚未選定大品項"};
+  else chk2 = smallSum >= floor
+    ? {ok:true, text:`✓ 通過（下限${floor}）`}
+    : {ok:false, text:`✗ 未達下限（下限${floor}）`};
+  checks.push({label:"檢查②：小品項合計是否達下限？", ok:chk2.ok, text:chk2.text});
+
+  const chk3ok = smallCount === N_PICK;
+  checks.push({
+    label: `檢查③：是否剛好選定${N_PICK}款小品項？`,
+    ok: chk3ok,
+    text: chk3ok ? `✓ 剛好${N_PICK}款，且皆≥1單位` : `⚠ 目前共 ${smallCount} 款有數量`
+  });
+
+  checksEl.innerHTML = "";
+  checks.forEach(c => {
+    const div = document.createElement("div");
+    const cls = c.neutral ? "" : (c.ok === null ? "" : (c.ok ? "ok" : "warn"));
+    div.className = "check " + cls;
+    div.innerHTML = `<span class="label">${esc(c.label)}</span><span class="state">${esc(c.text)}</span>`;
+    checksEl.appendChild(div);
+  });
+
+  const before = BIG.reduce((s,p) => s + state.bigPrice[p.code]*state.big[p.code], 0)
+               + SMALL.reduce((s,p) => s + state.smallPrice[p.code]*state.small[p.code], 0);
+  const after = before * 0.9;
+  const rebate = before - after;
+
+  barTotalEl.textContent = `${fmt(before)} → ${fmt(after)}`;
+  barRebateEl.textContent = fmt(rebate);
+}
+recalc();
+
+})();
+</script>
