@@ -96,7 +96,7 @@ h1{font-size:22px; font-weight:700}
 .settle-card .block{display:flex; flex-direction:column; gap:4px}
 .settle-card .label{font-size:12px; letter-spacing:.04em; opacity:.85}
 .settle-card .value{font-size:26px; font-weight:700; font-family:"Space Grotesk",sans-serif; font-variant-numeric:tabular-nums}
-.settle-card .value.sub{font-size:18px; opacity:.9}
+.settle-card .value.sub{font-size:18px; color:var(--accent-ink); opacity:1}
 @media (max-width: 460px){
   .settle-card{padding:14px 16px; gap:10px 20px}
   .settle-card .value{font-size:21px}
@@ -120,9 +120,9 @@ h1{font-size:22px; font-weight:700}
   padding:12px max(16px, env(safe-area-inset-right,0px)) max(12px, env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px));
   display:flex; align-items:center; justify-content:space-between; gap:12px;
 }
-.bar .l{font-size:11.5px; opacity:.85}
-.bar .v{font-size:22px; font-weight:700; font-family:"Space Grotesk",sans-serif}
-.bar .v.sub{font-size:15px; opacity:.9}
+.bar .l{font-size:11.5px; color:var(--accent-ink); opacity:.9}
+.bar .v{font-size:22px; font-weight:700; font-family:"Space Grotesk",sans-serif; color:var(--accent-ink); opacity:1}
+.bar .v.sub{font-size:16px; color:var(--accent-ink); opacity:1}
 @media (max-width: 460px){
   .bar .v{font-size:17px}
   h1{font-size:19px}
