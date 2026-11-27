@@ -45,15 +45,15 @@ h1{font-size:22px; font-weight:700}
 .card h2{font-size:15px; font-weight:700}
 .rules{font-size:12.5px; color:var(--ink-dim); line-height:1.8; white-space:pre-line}
 .row{
-  display:grid; grid-template-columns: 1fr auto auto; gap:4px 10px;
-  align-items:end; padding:10px 0; border-top:1px solid var(--line);
+  display:flex; flex-wrap:wrap; column-gap:12px; row-gap:6px;
+  align-items:flex-end; padding:12px 0; border-top:1px solid var(--line);
 }
 .row:first-of-type{border-top:none}
-.row .meta{min-width:0; align-self:center}
+.row .meta{flex:1 1 150px; min-width:0; align-self:center}
 .row .name{font-size:13.5px; font-weight:600}
 .row .code{font-size:11px; color:var(--ink-dim); font-variant-numeric:tabular-nums}
 .row .price{font-size:11.5px; color:var(--ink-dim); margin-top:2px}
-.field{display:flex; flex-direction:column; gap:3px; align-items:center}
+.field{display:flex; flex-direction:column; gap:3px; align-items:center; flex:0 0 auto}
 .field label{font-size:10px; color:var(--ink-dim); white-space:nowrap}
 .qty, .priceInput{
   width:76px; text-align:center; font-size:15px; font-variant-numeric:tabular-nums;
@@ -62,8 +62,25 @@ h1{font-size:22px; font-weight:700}
 }
 .qty:focus, .priceInput:focus{outline:2px solid var(--accent); outline-offset:1px}
 .priceInput.below{border-color:var(--warn-ink); background:var(--warn-bg)}
-.subtotal{grid-column:1/-1; text-align:right; font-size:11.5px; color:var(--ink-dim); margin-top:-2px}
-.pricewarn{grid-column:1/-1; text-align:right; font-size:11px; font-weight:700; color:var(--warn-ink); margin-top:-2px}
+.subtotal{flex:1 1 100%; text-align:right; font-size:11.5px; color:var(--ink-dim)}
+.pricewarn{flex:1 1 100%; text-align:right; font-size:11px; font-weight:700; color:var(--warn-ink)}
+
+/* phone-width layout: stack each row's fields full-width with bigger tap targets */
+@media (max-width: 460px){
+  .row{flex-direction:column; align-items:stretch}
+  .row .meta{flex-basis:auto}
+  .field{flex-direction:row; justify-content:space-between; align-items:center; width:100%}
+  .field label{font-size:12.5px}
+  .qty, .priceInput{width:120px; font-size:16px; padding:10px 6px}
+  .subtotal, .pricewarn{text-align:left}
+  .card{padding:14px}
+}
+
+/* wide screens: give the card grid room to breathe and cap line length */
+@media (min-width: 860px){
+  .wrap{max-width:760px}
+  .row .meta{flex-basis:260px}
+}
 .checklist{display:flex; flex-direction:column; gap:8px}
 .check{
   display:flex; justify-content:space-between; gap:12px; align-items:flex-start;
@@ -83,6 +100,10 @@ h1{font-size:22px; font-weight:700}
 }
 .bar .l{font-size:11px; color:var(--ink-dim)}
 .bar .v{font-size:20px; font-weight:700; font-family:"Space Grotesk",sans-serif; color:var(--accent)}
+@media (max-width: 460px){
+  .bar .v{font-size:16px}
+  h1{font-size:19px}
+}
 </style>
 
 <div class="wrap">
